@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora de Derivadas</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.11.0/math.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #ffeef8 0%, #e8d5f2 50%, #d5e8f7 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: absolute;
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(255, 182, 193, 0.3), transparent);
+            border-radius: 50%;
+            top: -100px;
+            right: -100px;
+            animation: float 8s ease-in-out infinite;
+        }
+
+        body::after {
+            content: '';
+            position: absolute;
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(221, 160, 221, 0.3), transparent);
+            border-radius: 50%;
+            bottom: -100px;
+            left: -100px;
+            animation: float 10s ease-in-out infinite reverse;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(30px); }
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 30px;
+            box-shadow: 0 25px 80px rgba(255, 182, 193, 0.4);
+            padding: 50px;
+            max-width: 650px;
+            width: 100%;
+            position: relative;
+            z-index: 1;
+            border: 3px solid rgba(255, 182, 193, 0.3);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .icon-wrapper {
+            display: inline-block;
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #ffb6c1 0%, #dda0dd 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(255, 182, 193, 0.5);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .icon-wrapper::before {
+            content: '∂';
+            font-size: 48px;
+            color: white;
+            font-weight: bold;
+        }
+
+        h1 {
+            background: linear-gradient(135deg, #ff85a1 0%, #d896ff 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .subtitle {
+            color: #a78bba;
+            font-size: 1em;
+            font-weight: 500;
+        }
+
+        .card {
+            background: linear-gradient(135deg, #fff5f7 0%, #f8f0ff 100%);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 25px;
+            border: 2px solid rgba(255, 182, 193, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(255, 182, 193, 0.3);
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-group:last-child {
+            margin-bottom: 0;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 10px;
+            color: #d896ff;
+            font-weight: 600;
+            font-size: 1em;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        label::before {
+            content: '○';
+            color: #ffb6c1;
+            font-size: 1.2em;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 15px 20px;
+            border: 2px solid #ffd6e7;
+            border-radius: 15px;
+            font-size: 16px;
+            background: white;
+            transition: all 0.3s;
+            color: #6b4c7a;
+            font-weight: 500;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #ffb6c1;
+            box-shadow: 0 5px 20px rgba(255, 182, 193, 0.3);
+            transform: scale(1.02);
+        }
+
+        input::placeholder {
+            color: #d4a5d8;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(135deg, #ffb6c1 0%, #dda0dd 50%, #b4d4ff 100%);
+            color: white;
+            border: none;
+            border-radius: 20px;
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 10px 30px rgba(255, 182, 193, 0.4);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+            transition: left 0.5s;
+        }
+
+        .btn:hover::before {
+            left: 100%;
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(255, 182, 193, 0.6);
+        }
+
+        .btn:active {
+            transform: translateY(-1px);
+        }
+
+        .result {
+            margin-top: 30px;
+            padding: 30px;
+            background: linear-gradient(135deg, #fff0f5 0%, #f0e6ff 100%);
+            border-radius: 20px;
+            border: 3px solid #ffb6c1;
+            display: none;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .result::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, #ffb6c1, #dda0dd, #b4d4ff, #ffb6c1);
+            border-radius: 20px;
+            z-index: -1;
+            opacity: 0.3;
+            animation: borderRotate 3s linear infinite;
+        }
+
+        @keyframes borderRotate {
+            0% { filter: hue-rotate(0deg); }
+            100% { filter: hue-rotate(360deg); }
+        }
+
+        .result.show {
+            display: block;
+            animation: slideIn 0.5s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .result h3 {
+            background: linear-gradient(135deg, #ff85a1 0%, #d896ff 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .result-item {
+            margin: 15px 0;
+            padding: 20px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(255, 182, 193, 0.2);
+            transition: all 0.3s;
+        }
+
+        .result-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 8px 25px rgba(255, 182, 193, 0.3);
+        }
+
+        .result-label {
+            font-weight: 600;
+            color: #d896ff;
+            margin-bottom: 8px;
+            font-size: 0.95em;
+        }
+
+        .result-value {
+            color: #6b4c7a;
+            font-family: 'Courier New', monospace;
+            font-size: 1.2em;
+            font-weight: 600;
+        }
+
+        .error {
+            background: linear-gradient(135deg, #ffe6e6 0%, #ffe0f0 100%);
+            border-color: #ffb6c1;
+        }
+
+        .error h3 {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ff85a1 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 30px 20px;
+            }
+
+            h1 {
+                font-size: 2em;
+            }
+
+            .icon-wrapper {
+                width: 60px;
+                height: 60px;
+            }
+
+            .icon-wrapper::before {
+                font-size: 36px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Calculadora de Derivadas</h1>
+            <p class="subtitle">Calcula derivadas ✨</p>
+        </div>
+
+        <div class="card">
+            <div class="input-group">
+                <label for="funcion">Función f(x)</label>
+                <input type="text" id="funcion" placeholder="Ej: x^2 + 3*x + 5">
+            </div>
+
+            <div class="input-group">
+                <label for="variable">Variable de derivación</label>
+                <select id="variable">
+                    <option value="x">x</option>
+                    <option value="y">y</option>
+                    <option value="t">t</option>
+                </select>
+            </div>
+        </div>
+
+        <button class="btn" onclick="calcularDerivada()">✨ Calcular Derivada</button>
+
+        <div id="resultado" class="result"></div>
+    </div>
+
+    <script>
+        function calcularDerivada() {
+            const funcionStr = document.getElementById('funcion').value;
+            const variable = document.getElementById('variable').value;
+            const resultadoDiv = document.getElementById('resultado');
+
+            if (!funcionStr) {
+                resultadoDiv.className = 'result show error';
+                resultadoDiv.innerHTML = `
+                    <h3>⚠️ ¡Ups! Algo falta</h3>
+                    <p style="color: #6b4c7a; margin-top: 10px;">Por favor, ingresa una función para calcular su derivada.</p>
+                `;
+                return;
+            }
+
+            try {
+                const funcion = math.parse(funcionStr);
+                const derivada = math.derivative(funcion, variable);
+                const derivadaSimplificada = math.simplify(derivada);
+
+                resultadoDiv.className = 'result show';
+                resultadoDiv.innerHTML = `
+                    <h3>✨ ¡Resultado calculado!</h3>
+                    <div class="result-item">
+                        <div class="result-label">📝 Función original</div>
+                        <div class="result-value">f(${variable}) = ${funcion.toString()}</div>
+                    </div>
+                    <div class="result-item">
+                        <div class="result-label">🎯 Derivada</div>
+                        <div class="result-value">f'(${variable}) = ${derivadaSimplificada.toString()}</div>
+                    </div>
+                `;
+
+            } catch (error) {
+                resultadoDiv.className = 'result show error';
+                resultadoDiv.innerHTML = `
+                    <h3>⚠️ Error en el cálculo</h3>
+                    <p style="color: #6b4c7a; margin-top: 10px;">
+                        No se pudo calcular la derivada. Verifica que la función esté escrita correctamente.
+                    </p>
+                    <p style="margin-top: 15px; font-size: 0.85em; color: #999; padding: 15px; background: white; border-radius: 10px;">
+                        <strong>Detalle técnico:</strong><br>${error.message}
+                    </p>
+                `;
+            }
+        }
+
+        document.getElementById('funcion').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                calcularDerivada();
+            }
+        });
+    </script>
+</body>
+</html>
